@@ -1,20 +1,9 @@
 import express from 'express';
 import Cafe from '../models/Cafe.js';
 import { protect, adminOnly } from '../middleware/auth.js';
-import multer from 'multer';
-import path from 'path';
+import { upload } from '../config/cloudinary.js';
 
 const router = express.Router();
-
-// Multer setup
-const storage = multer.diskStorage({
-  destination: 'uploads/',
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname));
-  }
-});
-
-const upload = multer({ storage });
 
 // Get all cafes with improved search
 router.get('/', async (req, res) => {
@@ -60,7 +49,8 @@ router.post('/', protect, adminOnly, upload.single('image'), async (req, res) =>
     console.log('BODY:', req.body);
     console.log('FILE:', req.file);
 
-    const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
+    // Cloudinary returns the full URL in req.file.path
+    const imagePath = req.file ? req.file.path : null;
 
     const cafe = await Cafe.create({
       name: req.body.name,
@@ -95,7 +85,8 @@ router.put('/:id', protect, adminOnly, upload.single('image'), async (req, res) 
     const cafe = await Cafe.findById(req.params.id);
     if (!cafe) return res.status(404).json({ message: 'Cafe not found' });
 
-    const imagePath = req.file ? `/uploads/${req.file.filename}` : cafe.image;
+    // Cloudinary returns the full URL in req.file.path
+    const imagePath = req.file ? req.file.path : cafe.image;
 
     cafe.name = req.body.name || cafe.name;
     cafe.description = req.body.description || cafe.description;
