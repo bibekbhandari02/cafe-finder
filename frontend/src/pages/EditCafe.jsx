@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../config/api';
 import { FaCoffee, FaMapMarkerAlt, FaDollarSign, FaImage, FaArrowLeft } from 'react-icons/fa';
 
 const EditCafe = () => {

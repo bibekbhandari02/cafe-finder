@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import axios from 'axios';
+import axios from '../config/api';
 import { FaCoffee, FaMapMarkerAlt, FaDollarSign, FaImage, FaClock, FaStar, FaArrowLeft } from 'react-icons/fa';
 
 const AddCafe = () => {

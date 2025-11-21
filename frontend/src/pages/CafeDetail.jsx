@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../config/api';
 import { useAuth } from '../context/AuthContext';
 import { FaStar, FaWifi, FaParking, FaMusic, FaClock } from 'react-icons/fa';
 import MapView from '../components/MapView';

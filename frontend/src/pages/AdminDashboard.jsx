@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../config/api';
 import { FiEdit2, FiTrash2, FiPlus, FiEye } from 'react-icons/fi';
 import { FaCoffee, FaStar, FaMapMarkerAlt, FaSearch } from 'react-icons/fa';
 

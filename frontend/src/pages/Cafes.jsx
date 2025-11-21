@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import axios from '../config/api';
 import SearchBar from '../components/SearchBar';
 import CafeCard from '../components/CafeCard';
 import CafeCardSkeleton from '../components/CafeCardSkeleton';
