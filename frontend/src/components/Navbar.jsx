@@ -16,12 +16,25 @@ const Navbar = () => {
         <Link to="/" className="text-2xl font-bold text-amber-600">☕ CafeFinder</Link>
         
         <div className="flex space-x-6 items-center">
-          <Link to="/cafes" className="hover:text-amber-600 transition">Explore</Link>
+          <Link to="/cafes" className="hover:text-amber-600 transition dark:text-white">Explore</Link>
+          <Link to="/map" className="hover:text-amber-600 transition dark:text-white">Map</Link>
           
-          {user ? (
+          {user?.isAdmin ? (
+            // Admin Navigation
             <>
-              <Link to="/add-cafe" className="hover:text-amber-600 transition">Add Cafe</Link>
-              <Link to="/profile" className="hover:text-amber-600 transition">Profile</Link>
+              <Link to="/admin" className="hover:text-amber-600 transition dark:text-white">Dashboard</Link>
+              <Link to="/add-cafe" className="hover:text-amber-600 transition dark:text-white">Add Cafe</Link>
+              <button 
+                onClick={handleLogout}
+                className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition"
+              >
+                Logout
+              </button>
+            </>
+          ) : user ? (
+            // Regular User Navigation
+            <>
+              <Link to="/profile" className="hover:text-amber-600 transition dark:text-white">Profile</Link>
               <button 
                 onClick={handleLogout}
                 className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition"
@@ -30,8 +43,9 @@ const Navbar = () => {
               </button>
             </>
           ) : (
+            // Guest Navigation
             <>
-              <Link to="/login" className="hover:text-amber-600 transition">Login</Link>
+              <Link to="/login" className="hover:text-amber-600 transition dark:text-white">Login</Link>
               <Link 
                 to="/register" 
                 className="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition"

@@ -1,22 +1,38 @@
 import { Link } from 'react-router-dom';
-import { FaMapMarkerAlt, FaStar } from 'react-icons/fa';
+import { FaMapMarkerAlt, FaStar, FaClock } from 'react-icons/fa';
+import { isOpenNow, getTodayHours } from '../utils/cafeUtils';
 
 const CafeCard = ({ cafe }) => {
-  // 👇 Fix double slash issue + ensure correct absolute URL
-  const imageUrl = cafe.image?.startsWith("http")
-    ? cafe.image
-    : `http://localhost:5000${cafe.image}`; // cafe.image already starts with /uploads/...
+  const imageUrl = cafe.image 
+    ? (cafe.image.startsWith("http") ? cafe.image : `http://localhost:5000${cafe.image}`)
+    : 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect width="400" height="300" fill="%23f59e0b"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" fill="%23ffffff"%3ECafe%3C/text%3E%3C/svg%3E';
+
+  const open = isOpenNow(cafe.openingHours);
+  const todayHours = getTodayHours(cafe.openingHours);
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
 
-      {/* Cafe Image */}
-      <img
-        src={imageUrl}
-        alt={cafe.name}
-        className="w-full h-48 object-cover"
-        onError={(e) => (e.target.src = "/fallback-cafe.jpg")} // Optional fallback
-      />
+      {/* Cafe Image with Open Badge */}
+      <div className="relative">
+        <img
+          src={imageUrl}
+          alt={cafe.name}
+          className="w-full h-48 object-cover"
+          onError={(e) => {
+            e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect width="400" height="300" fill="%23f59e0b"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" fill="%23ffffff"%3ECafe%3C/text%3E%3C/svg%3E';
+            e.target.onerror = null;
+          }}
+        />
+        {open !== null && (
+          <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 ${
+            open ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+          }`}>
+            <FaClock className="text-xs" />
+            {open ? 'Open Now' : 'Closed'}
+          </div>
+        )}
+      </div>
 
       <div className="p-6">
 
@@ -35,12 +51,20 @@ const CafeCard = ({ cafe }) => {
           {cafe.description}
         </p>
 
-        {/* Location */}
-        <div className="flex items-center mb-3">
-          <FaMapMarkerAlt className="text-gray-400 mr-2" />
-          <span className="text-sm text-gray-600 dark:text-gray-400">
-            {cafe?.address?.city}, {cafe?.address?.country}
-          </span>
+        {/* Location & Hours */}
+        <div className="space-y-2 mb-3">
+          <div className="flex items-start">
+            <FaMapMarkerAlt className="text-gray-400 mr-2 flex-shrink-0 mt-1" />
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              {cafe?.address?.street}, {cafe?.address?.city}
+            </span>
+          </div>
+          <div className="flex items-center">
+            <FaClock className="text-gray-400 mr-2 flex-shrink-0" />
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              {todayHours}
+            </span>
+          </div>
         </div>
 
         {/* Rating + Amenities */}
@@ -63,13 +87,25 @@ const CafeCard = ({ cafe }) => {
           </div>
         </div>
 
-        {/* View Details Button */}
-        <Link
-          to={`/cafes/${cafe._id}`}
-          className="block w-full text-center bg-amber-600 text-white py-2 rounded-lg hover:bg-amber-700 transition"
-        >
-          View Details
-        </Link>
+        {/* Action Buttons */}
+        <div className="flex gap-2">
+          <Link
+            to={`/cafes/${cafe._id}`}
+            className="flex-1 text-center bg-amber-600 text-white py-2 rounded-lg hover:bg-amber-700 transition"
+          >
+            View Details
+          </Link>
+          <button
+            onClick={() => {
+              const { lat, lng } = cafe.address.coordinates;
+              window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
+            }}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+            title="Get Directions"
+          >
+            <FaMapMarkerAlt />
+          </button>
+        </div>
       </div>
     </div>
   );

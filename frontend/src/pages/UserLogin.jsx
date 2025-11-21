@@ -2,16 +2,16 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-const Login = () => {
+const UserLogin = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
-  const { adminLogin, user } = useAuth();
+  const { login, user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    // If already logged in as admin, redirect to dashboard
-    if (user?.isAdmin) {
-      navigate('/admin', { replace: true });
+    // If already logged in, redirect
+    if (user) {
+      navigate('/cafes');
     }
   }, [user, navigate]);
 
@@ -20,8 +20,8 @@ const Login = () => {
     setError('');
     
     try {
-      await adminLogin(formData.email, formData.password);
-      navigate('/admin');
+      await login(formData.email, formData.password);
+      navigate('/cafes');
     } catch (error) {
       setError(error.response?.data?.message || 'Login failed');
     }
@@ -30,9 +30,9 @@ const Login = () => {
   return (
     <div className="max-w-md mx-auto mt-20 p-6">
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
-        <h2 className="text-2xl font-bold text-center mb-6 dark:text-white">Admin Login</h2>
+        <h2 className="text-2xl font-bold text-center mb-6 dark:text-white">Welcome Back</h2>
         <p className="text-center text-gray-600 dark:text-gray-400 mb-6">
-          Only administrators can access this system
+          Login to explore cafes
         </p>
         
         {error && (
@@ -49,7 +49,7 @@ const Login = () => {
               required
               value={formData.email}
               onChange={(e) => setFormData({...formData, email: e.target.value})}
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
           </div>
           
@@ -60,7 +60,7 @@ const Login = () => {
               required
               value={formData.password}
               onChange={(e) => setFormData({...formData, password: e.target.value})}
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
           </div>
           
@@ -68,13 +68,17 @@ const Login = () => {
             type="submit"
             className="w-full bg-amber-600 text-white py-2 rounded-lg hover:bg-amber-700 transition"
           >
-            Login as Admin
+            Login
           </button>
         </form>
+        
+        <p className="text-center mt-4 dark:text-white">
+          Don't have an account? <Link to="/register" className="text-amber-600 hover:underline">Sign Up</Link>
+        </p>
 
         <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
           <p className="text-center text-sm text-gray-600 dark:text-gray-400">
-            Regular user? <Link to="/login" className="text-blue-600 hover:underline">User Login</Link>
+            Are you an admin? <Link to="/admin/login" className="text-blue-600 hover:underline">Admin Login</Link>
           </p>
         </div>
       </div>
@@ -82,4 +86,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default UserLogin;

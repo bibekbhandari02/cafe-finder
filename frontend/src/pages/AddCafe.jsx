@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 
 const AddCafe = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -12,7 +14,16 @@ const AddCafe = () => {
     lat: '',
     lng: '',
     priceRange: '₹',
-    amenities: ''
+    amenities: '',
+    openingHours: {
+      monday: '7:00 AM - 9:00 PM',
+      tuesday: '7:00 AM - 9:00 PM',
+      wednesday: '7:00 AM - 9:00 PM',
+      thursday: '7:00 AM - 9:00 PM',
+      friday: '7:00 AM - 10:00 PM',
+      saturday: '7:00 AM - 10:00 PM',
+      sunday: '7:00 AM - 9:00 PM'
+    }
   });
   const [image, setImage] = useState(null);
 
@@ -28,6 +39,7 @@ const AddCafe = () => {
     data.append('lng', formData.lng);
     data.append('priceRange', formData.priceRange);
     data.append('amenities', formData.amenities);
+    data.append('openingHours', JSON.stringify(formData.openingHours));
     if (image) data.append('image', image);
 
     try {
@@ -38,17 +50,7 @@ const AddCafe = () => {
         },
       });
       alert('Cafe added successfully!');
-      setFormData({
-        name: '',
-        description: '',
-        street: '',
-        city: '',
-        lat: '',
-        lng: '',
-        priceRange: '₹',
-        amenities: ''
-      });
-      setImage(null);
+      navigate('/admin');
     } catch (error) {
       console.error(error.response?.data || error);
       alert('Failed to add cafe');
@@ -101,6 +103,28 @@ const AddCafe = () => {
           <input type="file" accept="image/*"
             onChange={e => setImage(e.target.files[0])}
             className="w-full p-2 border rounded" />
+
+          {/* Opening Hours */}
+          <div className="border-t pt-4 mt-4">
+            <h3 className="font-semibold mb-3">Opening Hours</h3>
+            <div className="grid grid-cols-2 gap-3">
+              {Object.keys(formData.openingHours).map(day => (
+                <div key={day}>
+                  <label className="block text-sm capitalize mb-1">{day}</label>
+                  <input
+                    type="text"
+                    placeholder="9:00 AM - 5:00 PM"
+                    value={formData.openingHours[day]}
+                    onChange={e => setFormData({
+                      ...formData,
+                      openingHours: { ...formData.openingHours, [day]: e.target.value }
+                    })}
+                    className="w-full p-2 border rounded text-sm"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
 
           <button type="submit" className="w-full bg-amber-600 text-white py-2 rounded">
             Add Cafe

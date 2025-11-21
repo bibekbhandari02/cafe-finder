@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { FaStar, FaWifi, FaParking, FaMusic } from 'react-icons/fa';
+import { FaStar, FaWifi, FaParking, FaMusic, FaClock } from 'react-icons/fa';
 import MapView from '../components/MapView';
 import { FaMapMarkerAlt } from "react-icons/fa";
+import { isOpenNow, getTodayHours } from '../utils/cafeUtils';
 
 const CafeDetail = () => {
   const { id } = useParams();
@@ -65,10 +66,9 @@ const CafeDetail = () => {
     'Live Music': <FaMusic />,
   };
 
-  // Fix image URL for backend uploads
-  const imageUrl = cafe.image?.startsWith("http")
-    ? cafe.image
-    : `http://localhost:5000${cafe.image}`;
+  const imageUrl = cafe.image 
+    ? (cafe.image.startsWith("http") ? cafe.image : `http://localhost:5000${cafe.image}`)
+    : 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="800" height="400"%3E%3Crect width="800" height="400" fill="%23f59e0b"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial, sans-serif" font-size="48" fill="%23ffffff"%3ECafe Image%3C/text%3E%3C/svg%3E';
 
   return (
     <div className="container mx-auto px-6 py-8">
@@ -78,7 +78,10 @@ const CafeDetail = () => {
             src={imageUrl}
             alt={cafe.name}
             className="w-full h-96 object-cover rounded-xl shadow-lg mb-6"
-            onError={(e) => (e.target.src = "/fallback-cafe.jpg")}
+            onError={(e) => {
+              e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="800" height="400"%3E%3Crect width="800" height="400" fill="%23f59e0b"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial, sans-serif" font-size="48" fill="%23ffffff"%3ECafe Image%3C/text%3E%3C/svg%3E';
+              e.target.onerror = null;
+            }}
           />
           
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
@@ -100,10 +103,19 @@ const CafeDetail = () => {
                 <h3 className="text-lg font-semibold mb-2 dark:text-white flex items-center">
                   <FaMapMarkerAlt className="mr-2" /> Address
                 </h3>
-                <p className="text-gray-600 dark:text-gray-300">
+                <p className="text-gray-600 dark:text-gray-300 mb-3">
                   {cafe.address.street}<br />
                   {cafe.address.city}, {cafe.address.country}
                 </p>
+                <button
+                  onClick={() => {
+                    const { lat, lng } = cafe.address.coordinates;
+                    window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
+                  }}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+                >
+                  <FaMapMarkerAlt /> Get Directions
+                </button>
               </div>
               
               <div>
@@ -117,6 +129,36 @@ const CafeDetail = () => {
                 </div>
               </div>
             </div>
+
+            {/* Opening Hours Section */}
+            {cafe.openingHours && (
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mt-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold dark:text-white flex items-center gap-2">
+                    <FaClock /> Opening Hours
+                  </h3>
+                  {isOpenNow(cafe.openingHours) !== null && (
+                    <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                      isOpenNow(cafe.openingHours) ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+                    }`}>
+                      {isOpenNow(cafe.openingHours) ? 'Open Now' : 'Closed'}
+                    </span>
+                  )}
+                </div>
+                <div className="grid md:grid-cols-2 gap-3">
+                  {Object.entries(cafe.openingHours).map(([day, hours]) => (
+                    <div key={day} className={`flex justify-between p-2 rounded ${
+                      day.toLowerCase() === ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][new Date().getDay()]
+                        ? 'bg-amber-50 dark:bg-amber-900/20 font-semibold'
+                        : ''
+                    }`}>
+                      <span className="capitalize dark:text-white">{day}</span>
+                      <span className="text-gray-600 dark:text-gray-400">{hours}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Reviews Section */}

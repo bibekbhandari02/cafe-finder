@@ -11,12 +11,20 @@ const Home = () => {
             <FaCoffee className="mr-4" /> Discover Your Perfect Cafe
           </h1>
           <p className="text-xl mb-8">Find the best coffee spots near you</p>
-          <Link 
-            to="/cafes"
-            className="bg-white text-amber-600 px-8 py-3 rounded-full font-semibold hover:bg-gray-100 transition inline-flex items-center"
-          >
-            <FaSearch className="mr-2" /> Start Exploring
-          </Link>
+          <div className="flex gap-4 justify-center">
+            <Link 
+              to="/cafes"
+              className="bg-white text-amber-600 px-8 py-3 rounded-full font-semibold hover:bg-gray-100 transition inline-flex items-center"
+            >
+              <FaSearch className="mr-2" /> Browse Cafes
+            </Link>
+            <Link 
+              to="/map"
+              className="bg-blue-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-blue-700 transition inline-flex items-center"
+            >
+              <FaMapMarkedAlt className="mr-2" /> Map Search
+            </Link>
+          </div>
         </div>
       </div>
 
