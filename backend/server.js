@@ -33,10 +33,16 @@ app.get('/', (req, res) => {
   res.json({ message: 'Cafe Finder API is running' });
 });
 
-// Database connection
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error('MongoDB connection error:', err));
+// Database connection with proper options
+mongoose.connect(process.env.MONGO_URI, {
+  serverSelectionTimeoutMS: 30000, // Increase timeout to 30 seconds
+  socketTimeoutMS: 45000,
+})
+  .then(() => console.log('✅ MongoDB connected successfully'))
+  .catch(err => {
+    console.error('❌ MongoDB connection error:', err);
+    process.exit(1); // Exit if database connection fails
+  });
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
