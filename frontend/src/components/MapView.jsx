@@ -68,10 +68,16 @@ const MapView = ({ cafes, selectedCafe }) => {
 
     // Add markers for each cafe
     cafes.forEach(cafe => {
-      const marker = L.marker([
-        cafe.address.coordinates.lat, 
-        cafe.address.coordinates.lng
-      ], { 
+      // Validate coordinates before creating marker
+      const lat = cafe.address?.coordinates?.lat;
+      const lng = cafe.address?.coordinates?.lng;
+      
+      if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
+        console.warn(`Skipping cafe "${cafe.name}" - invalid coordinates:`, lat, lng);
+        return; // Skip this cafe
+      }
+
+      const marker = L.marker([lat, lng], { 
         icon: cafeIcon,
         riseOnHover: true 
       })
@@ -93,15 +99,9 @@ const MapView = ({ cafes, selectedCafe }) => {
           className: 'custom-popup'
         });
       
-      // Smooth zoom on click
+      // Smooth zoom on click - no animation to avoid errors
       marker.on('click', () => {
-        mapInstance.current.flyTo([
-          cafe.address.coordinates.lat,
-          cafe.address.coordinates.lng
-        ], 14, {
-          animate: true,
-          duration: 0.8
-        });
+        mapInstance.current.setView([lat, lng], 14);
       });
 
       // Open popup on hover
@@ -116,15 +116,15 @@ const MapView = ({ cafes, selectedCafe }) => {
       markersRef.current.push(marker);
     });
 
-    // Focus on selected cafe with smooth animation
+    // Focus on selected cafe - use setView instead of flyTo to avoid animation errors
     if (selectedCafe && mapInstance.current) {
-      mapInstance.current.flyTo([
-        selectedCafe.address.coordinates.lat,
-        selectedCafe.address.coordinates.lng
-      ], 14, {
-        animate: true,
-        duration: 1
-      });
+      const lat = selectedCafe.address?.coordinates?.lat;
+      const lng = selectedCafe.address?.coordinates?.lng;
+      
+      // Only move map if we have valid coordinates
+      if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
+        mapInstance.current.setView([lat, lng], 14);
+      }
     }
   }, [cafes, selectedCafe]);
 

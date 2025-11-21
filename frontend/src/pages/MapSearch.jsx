@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from '../config/api';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -15,6 +15,7 @@ L.Icon.Default.mergeOptions({
 });
 
 const MapSearch = () => {
+  const navigate = useNavigate();
   const [cafes, setCafes] = useState([]);
   const [filteredCafes, setFilteredCafes] = useState([]);
   const [selectedCafe, setSelectedCafe] = useState(null);
@@ -51,10 +52,11 @@ const MapSearch = () => {
   // Update search circle and results when radius changes
   useEffect(() => {
     if (searchCenter && mapInstance.current && cafes.length > 0) {
+      // Redraw circle with new radius
       searchNearby(searchCenter[0], searchCenter[1]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchRadius, searchCenter]); // Removed cafes dependency to prevent re-drawing
+  }, [searchRadius]); // Only depend on searchRadius
 
   const fetchCafes = async () => {
     try {
@@ -244,8 +246,9 @@ const MapSearch = () => {
         riseOnHover: true
       }).addTo(mapInstance.current);
 
-      marker.bindPopup(`
-        <div class="p-3 min-w-[220px]">
+      // Create popup content with unique ID
+      const popupContent = `
+        <div class="p-3 min-w-[220px]" data-cafe-popup="${cafe._id}">
           <h3 class="font-bold text-lg mb-2 text-gray-800">${cafe.name}</h3>
           <p class="text-sm text-gray-600 mb-2 flex items-center gap-1">
             <span>📍</span> ${cafe.address.street}, ${cafe.address.city}
@@ -257,31 +260,64 @@ const MapSearch = () => {
             <span class="text-xs text-gray-500">(${cafe.reviewCount} reviews)</span>
           </div>
           <p class="text-sm font-bold text-amber-600 mb-3">${cafe.priceRange}</p>
-          <a href="/cafes/${cafe._id}" class="block w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white text-center py-2 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all text-sm font-medium">
+          <button 
+            id="cafe-btn-${cafe._id}"
+            class="cafe-detail-btn w-full bg-gradient-to-r from-amber-500 to-orange-600 text-white text-center py-2.5 rounded-lg hover:from-amber-600 hover:to-orange-700 transition-all text-sm font-bold cursor-pointer border-0 shadow-md"
+            style="display: block;"
+          >
             View Details →
-          </a>
+          </button>
         </div>
-      `, {
+      `;
+
+      marker.bindPopup(popupContent, {
         maxWidth: 250,
-        className: 'custom-popup'
+        minWidth: 200,
+        className: 'custom-popup',
+        closeButton: true,
+        autoClose: false,
+        closeOnClick: false
       });
 
-      // Smooth zoom on marker click
+      // Click handler - open popup and show in mobile list
       marker.on('click', () => {
         setSelectedCafe(cafe);
-        mapInstance.current.flyTo([
-          cafe.address.coordinates.lat,
-          cafe.address.coordinates.lng
-        ], 16, {
-          animate: true,
-          duration: 0.8
+        marker.openPopup();
+        
+        // On mobile, also open the bottom sheet
+        if (window.innerWidth < 768) {
+          setShowMobileList(true);
+        }
+      });
+
+      // Handle popup open event to attach button click listener
+      marker.on('popupopen', () => {
+        // Use requestAnimationFrame to ensure DOM is fully rendered
+        requestAnimationFrame(() => {
+          const btn = document.getElementById(`cafe-btn-${cafe._id}`);
+          if (btn) {
+            // Remove any existing listeners
+            btn.replaceWith(btn.cloneNode(true));
+            const newBtn = document.getElementById(`cafe-btn-${cafe._id}`);
+            
+            if (newBtn) {
+              newBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Navigating to cafe:', cafe._id);
+                navigate(`/cafes/${cafe._id}`);
+              });
+            }
+          }
         });
       });
 
-      // Hover effect
-      marker.on('mouseover', function() {
-        this.openPopup();
-      });
+      // Hover effect on desktop only
+      if (window.innerWidth >= 768) {
+        marker.on('mouseover', function() {
+          this.openPopup();
+        });
+      }
 
       markersRef.current.push(marker);
     });
@@ -575,7 +611,11 @@ const MapSearch = () => {
                       <Link
                         key={cafe._id}
                         to={`/cafes/${cafe._id}`}
-                        className="block bg-gray-50 dark:bg-gray-700 rounded-xl p-3 hover:shadow-lg transition-all border-2 border-gray-200 dark:border-gray-600"
+                        className={`block rounded-xl p-3 hover:shadow-lg transition-all border-2 ${
+                          selectedCafe?._id === cafe._id
+                            ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-500 shadow-lg'
+                            : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600'
+                        }`}
                         onClick={() => setShowMobileList(false)}
                       >
                         <div className="flex gap-3">
