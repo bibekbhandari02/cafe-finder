@@ -29,6 +29,7 @@ const MapSearch = () => {
   const markersRef = useRef([]);
   const circleRef = useRef(null);
   const userLocationMarkerRef = useRef(null);
+  const isSearchingRef = useRef(false);
 
   useEffect(() => {
     fetchCafes();
@@ -52,7 +53,8 @@ const MapSearch = () => {
     if (searchCenter && mapInstance.current && cafes.length > 0) {
       searchNearby(searchCenter[0], searchCenter[1]);
     }
-  }, [searchRadius, searchCenter, cafes]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchRadius, searchCenter]); // Removed cafes dependency to prevent re-drawing
 
   const fetchCafes = async () => {
     try {
@@ -74,17 +76,50 @@ const MapSearch = () => {
 
   const initializeMap = () => {
     if (!mapInstance.current && mapRef.current) {
-      mapInstance.current = L.map(mapRef.current).setView(mapCenter, 13);
+      mapInstance.current = L.map(mapRef.current, {
+        zoomControl: true,
+        scrollWheelZoom: true,
+        doubleClickZoom: true,
+        touchZoom: true,
+        dragging: true,
+        tap: true,
+        zoomAnimation: false, // Disable animation to prevent movement
+        fadeAnimation: false,
+        markerZoomAnimation: false,
+        inertia: false, // Disable inertia/momentum
+        worldCopyJump: false,
+        maxBoundsViscosity: 1.0
+      }).setView([27.7172, 85.3240], 13); // Use fixed coordinates, not state
       
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors',
-        maxZoom: 19
+        maxZoom: 19,
+        minZoom: 3
       }).addTo(mapInstance.current);
 
-      // Add click event to search by location
+      // Simple click handler - no dragging detection needed
       mapInstance.current.on('click', (e) => {
         const { lat, lng } = e.latlng;
-        setMapCenter([lat, lng]);
+        
+        console.log('Map clicked at:', lat, lng);
+        
+        // Add temporary pulse effect at click location
+        const pulseMarker = L.circleMarker([lat, lng], {
+          radius: 10,
+          color: '#f59e0b',
+          fillColor: '#fbbf24',
+          fillOpacity: 0.8,
+          weight: 3
+        }).addTo(mapInstance.current);
+
+        // Animate and remove pulse
+        setTimeout(() => {
+          if (mapInstance.current) {
+            mapInstance.current.removeLayer(pulseMarker);
+          }
+        }, 800);
+
+        // Search at clicked location without moving map
         setSearchCenter([lat, lng]);
         searchNearby(lat, lng);
       });
@@ -92,20 +127,41 @@ const MapSearch = () => {
   };
 
   const searchNearby = (lat, lng) => {
-    if (!mapInstance.current) return;
+    if (!mapInstance.current || isSearchingRef.current) return;
+    
+    isSearchingRef.current = true;
 
-    // Remove existing circle
+    // Remove existing circle immediately
     if (circleRef.current) {
       mapInstance.current.removeLayer(circleRef.current);
+      circleRef.current = null;
     }
 
-    // Add search radius circle
+    // Add search radius circle WITHOUT any animation - instant placement
     circleRef.current = L.circle([lat, lng], {
       color: '#f59e0b',
       fillColor: '#fbbf24',
       fillOpacity: 0.2,
-      radius: searchRadius * 1000 // Convert km to meters
+      radius: searchRadius * 1000, // Convert km to meters
+      weight: 3,
+      dashArray: '10, 5',
+      interactive: false // Make it non-interactive to prevent any events
     }).addTo(mapInstance.current);
+
+    // Add center marker for search point
+    const searchMarker = L.circleMarker([lat, lng], {
+      radius: 8,
+      color: '#f59e0b',
+      fillColor: '#fbbf24',
+      fillOpacity: 1,
+      weight: 3
+    }).addTo(mapInstance.current);
+
+    // Remove old search marker if exists
+    if (window.searchMarkerRef) {
+      mapInstance.current.removeLayer(window.searchMarkerRef);
+    }
+    window.searchMarkerRef = searchMarker;
 
     // Filter cafes within radius
     const nearby = cafes.filter(cafe => {
@@ -119,8 +175,12 @@ const MapSearch = () => {
 
     setFilteredCafes(nearby);
     
-    // Pan to location without changing zoom
-    mapInstance.current.panTo([lat, lng]);
+    // Reset the searching flag
+    setTimeout(() => {
+      isSearchingRef.current = false;
+    }, 100);
+    
+    // Don't pan the map - keep cursor at clicked position
   };
 
   const calculateDistance = (lat1, lon1, lat2, lon2) => {
@@ -147,25 +207,80 @@ const MapSearch = () => {
     });
     markersRef.current = [];
 
+    // Create custom icon for cafes
+    const cafeIcon = L.divIcon({
+      className: '', // Remove animation class
+      html: `
+        <div style="
+          background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+          width: 32px;
+          height: 32px;
+          border-radius: 50% 50% 50% 0;
+          transform: rotate(-45deg);
+          border: 3px solid white;
+          box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        ">
+          <span style="
+            transform: rotate(45deg);
+            font-size: 16px;
+          ">☕</span>
+        </div>
+      `,
+      iconSize: [32, 32],
+      iconAnchor: [16, 32],
+      popupAnchor: [0, -32]
+    });
+
     // Add markers for filtered cafes
     filteredCafes.forEach(cafe => {
       const marker = L.marker([
         cafe.address.coordinates.lat,
         cafe.address.coordinates.lng
-      ]).addTo(mapInstance.current);
+      ], { 
+        icon: cafeIcon,
+        riseOnHover: true
+      }).addTo(mapInstance.current);
 
       marker.bindPopup(`
-        <div class="p-2 min-w-[200px]">
-          <h3 class="font-bold text-lg mb-1">${cafe.name}</h3>
-          <p class="text-sm text-gray-600 mb-1">📍 ${cafe.address.street}, ${cafe.address.city}</p>
-          <p class="text-sm mb-2">⭐ ${cafe.avgRating.toFixed(1)} (${cafe.reviewCount} reviews)</p>
-          <p class="text-sm font-semibold text-amber-600">${cafe.priceRange}</p>
-          <a href="/cafes/${cafe._id}" class="text-blue-600 text-sm hover:underline">View Details →</a>
+        <div class="p-3 min-w-[220px]">
+          <h3 class="font-bold text-lg mb-2 text-gray-800">${cafe.name}</h3>
+          <p class="text-sm text-gray-600 mb-2 flex items-center gap-1">
+            <span>📍</span> ${cafe.address.street}, ${cafe.address.city}
+          </p>
+          <div class="flex items-center gap-2 mb-2">
+            <span class="bg-yellow-100 px-2 py-1 rounded-lg text-sm flex items-center gap-1">
+              <span>⭐</span> ${cafe.avgRating.toFixed(1)}
+            </span>
+            <span class="text-xs text-gray-500">(${cafe.reviewCount} reviews)</span>
+          </div>
+          <p class="text-sm font-bold text-amber-600 mb-3">${cafe.priceRange}</p>
+          <a href="/cafes/${cafe._id}" class="block w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white text-center py-2 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all text-sm font-medium">
+            View Details →
+          </a>
         </div>
-      `);
+      `, {
+        maxWidth: 250,
+        className: 'custom-popup'
+      });
 
+      // Smooth zoom on marker click
       marker.on('click', () => {
         setSelectedCafe(cafe);
+        mapInstance.current.flyTo([
+          cafe.address.coordinates.lat,
+          cafe.address.coordinates.lng
+        ], 16, {
+          animate: true,
+          duration: 0.8
+        });
+      });
+
+      // Hover effect
+      marker.on('mouseover', function() {
+        this.openPopup();
       });
 
       markersRef.current.push(marker);
@@ -203,9 +318,7 @@ const MapSearch = () => {
                 </div>
               `);
 
-            // Get current zoom or use 14 as default
-            const currentZoom = mapInstance.current.getZoom();
-            mapInstance.current.setView([latitude, longitude], currentZoom > 10 ? currentZoom : 14);
+            // Don't change zoom, just search at current location
             searchNearby(latitude, longitude);
           }
         },
@@ -221,6 +334,8 @@ const MapSearch = () => {
   const resetSearch = () => {
     setFilteredCafes(cafes);
     setSearchCenter(null);
+    setSelectedCafe(null);
+    
     if (circleRef.current && mapInstance.current) {
       mapInstance.current.removeLayer(circleRef.current);
       circleRef.current = null;
@@ -229,8 +344,15 @@ const MapSearch = () => {
       mapInstance.current.removeLayer(userLocationMarkerRef.current);
       userLocationMarkerRef.current = null;
     }
+    if (window.searchMarkerRef && mapInstance.current) {
+      mapInstance.current.removeLayer(window.searchMarkerRef);
+      window.searchMarkerRef = null;
+    }
     if (mapInstance.current) {
-      mapInstance.current.setView([27.7172, 85.3240], 12);
+      mapInstance.current.flyTo([27.7172, 85.3240], 12, {
+        animate: true,
+        duration: 1
+      });
     }
   };
 
@@ -316,7 +438,7 @@ const MapSearch = () => {
         
         {/* Map */}
         <div className="flex-1 relative">
-          <div ref={mapRef} className="h-full w-full cursor-crosshair" />
+          <div ref={mapRef} className="h-full w-full" style={{ cursor: 'crosshair' }} />
         </div>
 
         {/* Sidebar - Hidden on mobile by default, shown on larger screens */}

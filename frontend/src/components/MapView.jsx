@@ -2,49 +2,129 @@ import { useEffect, useRef } from 'react';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
+// Fix for default marker icons
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
 const MapView = ({ cafes, selectedCafe }) => {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
+  const markersRef = useRef([]);
 
   useEffect(() => {
-    if (!mapInstance.current) {
-      mapInstance.current = L.map(mapRef.current).setView([27.6667, 85.3167], 7);
+    if (!mapInstance.current && mapRef.current) {
+      mapInstance.current = L.map(mapRef.current, {
+        zoomControl: true,
+        scrollWheelZoom: true,
+        doubleClickZoom: true,
+        dragging: true,
+        zoomAnimation: true,
+        fadeAnimation: true,
+        markerZoomAnimation: true
+      }).setView([27.6667, 85.3167], 7);
       
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19,
+        minZoom: 3
       }).addTo(mapInstance.current);
     }
 
     // Clear existing markers
-    mapInstance.current.eachLayer((layer) => {
-      if (layer instanceof L.Marker) {
-        mapInstance.current.removeLayer(layer);
+    markersRef.current.forEach(marker => {
+      if (mapInstance.current) {
+        mapInstance.current.removeLayer(marker);
       }
+    });
+    markersRef.current = [];
+
+    // Custom cafe icon
+    const cafeIcon = L.divIcon({
+      className: 'custom-cafe-marker',
+      html: `
+        <div style="
+          background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+          width: 32px;
+          height: 32px;
+          border-radius: 50% 50% 50% 0;
+          transform: rotate(-45deg);
+          border: 3px solid white;
+          box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        ">
+          <span style="transform: rotate(45deg); font-size: 16px;">☕</span>
+        </div>
+      `,
+      iconSize: [32, 32],
+      iconAnchor: [16, 32],
+      popupAnchor: [0, -32]
     });
 
     // Add markers for each cafe
     cafes.forEach(cafe => {
-      const marker = L.marker([cafe.address.coordinates.lat, cafe.address.coordinates.lng])
+      const marker = L.marker([
+        cafe.address.coordinates.lat, 
+        cafe.address.coordinates.lng
+      ], { 
+        icon: cafeIcon,
+        riseOnHover: true 
+      })
         .addTo(mapInstance.current)
         .bindPopup(`
-          <div class="p-2">
-            <h3 class="font-bold">${cafe.name}</h3>
-            <p class="text-sm">${cafe.address.city}</p>
-            <p class="text-sm">★ ${cafe.avgRating} (${cafe.reviewCount} reviews)</p>
+          <div class="p-3 min-w-[200px]">
+            <h3 class="font-bold text-lg mb-2">${cafe.name}</h3>
+            <p class="text-sm text-gray-600 mb-2">📍 ${cafe.address.city}</p>
+            <div class="flex items-center gap-2 mb-2">
+              <span class="bg-yellow-100 px-2 py-1 rounded-lg text-sm">
+                ⭐ ${cafe.avgRating.toFixed(1)}
+              </span>
+              <span class="text-xs text-gray-500">(${cafe.reviewCount})</span>
+            </div>
+            <p class="text-sm font-bold text-amber-600">${cafe.priceRange}</p>
           </div>
-        `);
+        `, {
+          maxWidth: 250,
+          className: 'custom-popup'
+        });
+      
+      // Smooth zoom on click
+      marker.on('click', () => {
+        mapInstance.current.flyTo([
+          cafe.address.coordinates.lat,
+          cafe.address.coordinates.lng
+        ], 14, {
+          animate: true,
+          duration: 0.8
+        });
+      });
+
+      // Open popup on hover
+      marker.on('mouseover', function() {
+        this.openPopup();
+      });
       
       if (selectedCafe?._id === cafe._id) {
         marker.openPopup();
       }
+
+      markersRef.current.push(marker);
     });
 
-    // Focus on selected cafe
-    if (selectedCafe) {
-      mapInstance.current.setView([
+    // Focus on selected cafe with smooth animation
+    if (selectedCafe && mapInstance.current) {
+      mapInstance.current.flyTo([
         selectedCafe.address.coordinates.lat,
         selectedCafe.address.coordinates.lng
-      ], 13);
+      ], 14, {
+        animate: true,
+        duration: 1
+      });
     }
   }, [cafes, selectedCafe]);
 
