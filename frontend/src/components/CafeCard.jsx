@@ -1,11 +1,10 @@
 import { Link } from 'react-router-dom';
 import { FaMapMarkerAlt, FaStar, FaClock } from 'react-icons/fa';
 import { isOpenNow, getTodayHours } from '../utils/cafeUtils';
+import { getImageUrl } from '../utils/imageUtils';
 
 const CafeCard = ({ cafe }) => {
-  const imageUrl = cafe.image 
-    ? (cafe.image.startsWith("http") ? cafe.image : `http://localhost:5000${cafe.image}`)
-    : 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect width="400" height="300" fill="%23f59e0b"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" fill="%23ffffff"%3ECafe%3C/text%3E%3C/svg%3E';
+  const imageUrl = getImageUrl(cafe.image);
 
   const open = isOpenNow(cafe.openingHours);
   const todayHours = getTodayHours(cafe.openingHours);

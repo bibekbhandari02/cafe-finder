@@ -6,6 +6,7 @@ import { FaStar, FaWifi, FaParking, FaMusic, FaClock } from 'react-icons/fa';
 import MapView from '../components/MapView';
 import { FaMapMarkerAlt } from "react-icons/fa";
 import { isOpenNow, getTodayHours } from '../utils/cafeUtils';
+import { getImageUrl } from '../utils/imageUtils';
 
 const CafeDetail = () => {
   const { id } = useParams();
@@ -81,9 +82,7 @@ const CafeDetail = () => {
     'Live Music': <FaMusic />,
   };
 
-  const imageUrl = cafe.image 
-    ? (cafe.image.startsWith("http") ? cafe.image : `http://localhost:5000${cafe.image}`)
-    : 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="800" height="400"%3E%3Crect width="800" height="400" fill="%23f59e0b"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial, sans-serif" font-size="48" fill="%23ffffff"%3ECafe Image%3C/text%3E%3C/svg%3E';
+  const imageUrl = getImageUrl(cafe.image);
 
   return (
     <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">

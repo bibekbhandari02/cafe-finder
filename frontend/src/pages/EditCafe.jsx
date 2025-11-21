@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from '../config/api';
 import { FaCoffee, FaMapMarkerAlt, FaDollarSign, FaImage, FaArrowLeft } from 'react-icons/fa';
+import { getImageUrl } from '../utils/imageUtils';
 
 const EditCafe = () => {
   const { id } = useParams();
@@ -38,11 +39,7 @@ const EditCafe = () => {
     }
   };
 
-  const getImageUrl = (imagePath) => {
-    if (!imagePath) return '';
-    if (imagePath.startsWith('http')) return imagePath;
-    return `http://localhost:5000${imagePath}`;
-  };
+
 
   const fetchCafe = async () => {
     try {

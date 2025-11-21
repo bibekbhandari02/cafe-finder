@@ -4,6 +4,7 @@ import axios from '../config/api';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { FaMapMarkerAlt, FaStar, FaSearch, FaLocationArrow } from 'react-icons/fa';
+import { getImageUrl } from '../utils/imageUtils';
 
 // Fix for default marker icons in Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -233,14 +234,7 @@ const MapSearch = () => {
     }
   };
 
-  const getImageUrl = (imagePath) => {
-    if (!imagePath) {
-      // Return a data URL for inline SVG placeholder
-      return 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect width="400" height="300" fill="%23f59e0b"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" fill="%23ffffff"%3ECafe%3C/text%3E%3C/svg%3E';
-    }
-    if (imagePath.startsWith('http')) return imagePath;
-    return `http://localhost:5000${imagePath}`;
-  };
+
 
   if (loading) {
     return (

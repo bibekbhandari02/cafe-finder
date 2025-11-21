@@ -82,6 +82,10 @@ router.post('/', protect, adminOnly, upload.single('image'), async (req, res) =>
 // Update cafe (Admin only)
 router.put('/:id', protect, adminOnly, upload.single('image'), async (req, res) => {
   try {
+    console.log('UPDATE CAFE - ID:', req.params.id);
+    console.log('UPDATE CAFE - BODY:', req.body);
+    console.log('UPDATE CAFE - FILE:', req.file);
+
     const cafe = await Cafe.findById(req.params.id);
     if (!cafe) return res.status(404).json({ message: 'Cafe not found' });
 
@@ -99,9 +103,11 @@ router.put('/:id', protect, adminOnly, upload.single('image'), async (req, res) 
     cafe.image = imagePath;
 
     const updatedCafe = await cafe.save();
+    console.log('UPDATE SUCCESS:', updatedCafe._id);
     res.json(updatedCafe);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('UPDATE ERROR:', error);
+    res.status(500).json({ message: error.message, error: error.toString() });
   }
 });
 
