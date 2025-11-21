@@ -2,6 +2,7 @@ import { v2 as cloudinary } from 'cloudinary';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import multer from 'multer';
 import path from 'path';
+import fs from 'fs';
 
 // Check if Cloudinary credentials are available
 const hasCloudinaryConfig = 
@@ -35,8 +36,16 @@ if (hasCloudinaryConfig) {
 } else {
   // Fallback to local storage if Cloudinary not configured
   console.warn('⚠️  Cloudinary not configured, using local storage');
+  
+  // Create uploads directory if it doesn't exist
+  const uploadsDir = 'uploads';
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+    console.log('📁 Created uploads directory');
+  }
+  
   storage = multer.diskStorage({
-    destination: 'uploads/',
+    destination: uploadsDir,
     filename: function (req, file, cb) {
       cb(null, Date.now() + path.extname(file.originalname));
     }
