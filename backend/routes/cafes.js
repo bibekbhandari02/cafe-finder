@@ -1,7 +1,7 @@
 import express from 'express';
 import Cafe from '../models/Cafe.js';
 import { protect, adminOnly } from '../middleware/auth.js';
-import { upload } from '../config/cloudinary.js';
+import { upload, hasCloudinaryConfig } from '../config/cloudinary.js';
 
 const router = express.Router();
 
@@ -46,11 +46,21 @@ router.get('/:id', async (req, res) => {
 // Add cafe with image upload (Admin only)
 router.post('/', protect, adminOnly, upload.single('image'), async (req, res) => {
   try {
-    console.log('BODY:', req.body);
-    console.log('FILE:', req.file);
+    console.log('ADD CAFE - BODY:', req.body);
+    console.log('ADD CAFE - FILE:', req.file);
+    console.log('ADD CAFE - Cloudinary configured:', hasCloudinaryConfig);
 
-    // Cloudinary returns the full URL in req.file.path
-    const imagePath = req.file ? req.file.path : null;
+    // Handle image path based on storage type
+    let imagePath = null;
+    if (req.file) {
+      if (hasCloudinaryConfig) {
+        // Cloudinary returns the full URL in req.file.path
+        imagePath = req.file.path;
+      } else {
+        // Local storage returns filename
+        imagePath = `/uploads/${req.file.filename}`;
+      }
+    }
 
     const cafe = await Cafe.create({
       name: req.body.name,
@@ -85,12 +95,22 @@ router.put('/:id', protect, adminOnly, upload.single('image'), async (req, res) 
     console.log('UPDATE CAFE - ID:', req.params.id);
     console.log('UPDATE CAFE - BODY:', req.body);
     console.log('UPDATE CAFE - FILE:', req.file);
+    console.log('UPDATE CAFE - Cloudinary configured:', hasCloudinaryConfig);
 
     const cafe = await Cafe.findById(req.params.id);
     if (!cafe) return res.status(404).json({ message: 'Cafe not found' });
 
-    // Cloudinary returns the full URL in req.file.path
-    const imagePath = req.file ? req.file.path : cafe.image;
+    // Handle image path based on storage type
+    let imagePath = cafe.image;
+    if (req.file) {
+      if (hasCloudinaryConfig) {
+        // Cloudinary returns the full URL in req.file.path
+        imagePath = req.file.path;
+      } else {
+        // Local storage returns filename
+        imagePath = `/uploads/${req.file.filename}`;
+      }
+    }
 
     cafe.name = req.body.name || cafe.name;
     cafe.description = req.body.description || cafe.description;
