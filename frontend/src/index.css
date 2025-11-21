@@ -50,6 +50,54 @@ html {
   animation: fadeIn 0.5s ease-out;
 }
 
+/* Slide in from left */
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slideInLeft {
+  animation: slideInLeft 0.4s ease-out;
+}
+
+/* Slide in from right */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slideInRight {
+  animation: slideInRight 0.4s ease-out;
+}
+
+/* Scale in animation */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.3s ease-out;
+}
+
 /* Pulse animation for loading */
 @keyframes pulse {
   0%, 100% {
@@ -83,4 +131,210 @@ html {
 .dark .skeleton {
   background: linear-gradient(to right, #374151 4%, #4b5563 25%, #374151 36%);
   background-size: 1000px 100%;
+}
+
+/* Floating animation */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Gradient animation */
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradientShift 8s ease infinite;
+}
+
+/* Bounce in animation */
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-bounceIn {
+  animation: bounceIn 0.6s ease-out;
+}
+
+/* Smooth transitions */
+* {
+  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Glass morphism effect */
+.glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.dark .glass {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Enhanced button hover effects */
+.btn-hover-lift {
+  transition: all 0.3s ease;
+}
+
+.btn-hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.btn-hover-lift:active {
+  transform: translateY(0);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Card hover effects */
+.card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-hover:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* Input focus effects */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  ring: 2px;
+  ring-color: #f59e0b;
+  border-color: #f59e0b;
+}
+
+/* Toast notification slide in */
+@keyframes slideInFromTop {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.toast-enter {
+  animation: slideInFromTop 0.3s ease-out;
+}
+
+/* Ripple effect */
+@keyframes ripple {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+.ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.ripple:active::after {
+  width: 300px;
+  height: 300px;
+  animation: ripple 0.6s ease-out;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  /* Larger tap targets for mobile */
+  button, a {
+    min-height: 44px;
+  }
+  
+  /* Prevent text selection on double tap */
+  * {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+  
+  /* Smooth scrolling on mobile */
+  body {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Prevent zoom on input focus (iOS) */
+@media screen and (max-width: 768px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* Safe area for notched devices */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+  }
+}
+
+/* Improve touch scrolling */
+.overflow-y-auto,
+.overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Hide scrollbar on mobile for cleaner look */
+@media (max-width: 768px) {
+  ::-webkit-scrollbar {
+    width: 0px;
+    display: none;
+  }
 }

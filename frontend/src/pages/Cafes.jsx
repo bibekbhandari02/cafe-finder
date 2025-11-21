@@ -73,25 +73,38 @@ const Cafes = () => {
   });
 
   return (
-    <div className="container mx-auto px-6 py-8">
-      <h1 className="text-3xl font-bold mb-8 dark:text-white">Discover Cafes</h1>
+    <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <div className="mb-6 sm:mb-8 animate-fadeIn">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+          Discover Cafes
+        </h1>
+        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+          Explore {sortedCafes.length} amazing coffee spots
+        </p>
+      </div>
       
-      <SearchBar onSearch={handleSearch} />
+      <div className="animate-slideInLeft">
+        <SearchBar onSearch={handleSearch} />
+      </div>
       
       {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 mb-6">
-        <div className="flex items-center gap-2 mb-4">
-          <FaFilter className="text-amber-600" />
-          <h3 className="font-semibold dark:text-white">Filters & Sort</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 sm:p-6 mb-6 border border-gray-100 dark:border-gray-700 animate-slideInRight">
+        <div className="flex items-center gap-2 mb-4 sm:mb-5">
+          <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-2 rounded-lg">
+            <FaFilter className="text-white text-sm sm:text-base" />
+          </div>
+          <h3 className="font-bold text-base sm:text-lg dark:text-white">Filters & Sort</h3>
         </div>
         
-        <div className="grid md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-2 dark:text-white">Price Range</label>
+        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+          <div className="animate-scaleIn">
+            <label className="block text-sm font-semibold mb-2 dark:text-white text-gray-700">
+              💰 Price Range
+            </label>
             <select 
               value={priceFilter}
               onChange={(e) => setPriceFilter(e.target.value)}
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 dark:text-white"
+              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 dark:text-white focus:border-amber-500 dark:focus:border-amber-500 transition-all"
             >
               <option value="">All Prices</option>
               <option value="₹">₹ (Budget)</option>
@@ -100,49 +113,54 @@ const Cafes = () => {
             </select>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2 dark:text-white">Sort By</label>
+          <div className="animate-scaleIn" style={{ animationDelay: '0.1s' }}>
+            <label className="block text-sm font-semibold mb-2 dark:text-white text-gray-700">
+              🔄 Sort By
+            </label>
             <select 
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 dark:text-white"
+              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 dark:text-white focus:border-amber-500 dark:focus:border-amber-500 transition-all"
             >
-              <option value="rating">Highest Rated</option>
-              <option value="name">Name (A-Z)</option>
-              <option value="price">Price (Low to High)</option>
+              <option value="rating">⭐ Highest Rated</option>
+              <option value="name">🔤 Name (A-Z)</option>
+              <option value="price">💵 Price (Low to High)</option>
             </select>
           </div>
 
-          <div className="flex items-end">
-            <label className="flex items-center gap-2 cursor-pointer">
+          <div className="flex items-end animate-scaleIn" style={{ animationDelay: '0.2s' }}>
+            <label className="flex items-center gap-3 cursor-pointer bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 px-4 py-3 rounded-xl border-2 border-green-200 dark:border-green-800 hover:border-green-400 dark:hover:border-green-600 transition-all w-full">
               <input
                 type="checkbox"
                 checked={openNowFilter}
                 onChange={(e) => setOpenNowFilter(e.target.checked)}
-                className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500"
+                className="w-5 h-5 text-green-600 rounded focus:ring-green-500 cursor-pointer"
               />
-              <span className="text-sm font-medium dark:text-white">Open Now Only</span>
+              <span className="text-sm font-semibold dark:text-white text-gray-700">
+                🟢 Open Now Only
+              </span>
             </label>
           </div>
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8">
+      <div className="grid lg:grid-cols-3 gap-6 sm:gap-8">
         <div className="lg:col-span-2">
           {loading ? (
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
               {[1, 2, 3, 4].map(i => (
                 <CafeCardSkeleton key={i} />
               ))}
             </div>
           ) : (
             <>
-              <div className="grid md:grid-cols-2 gap-6">
-                {sortedCafes.map(cafe => (
+              <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
+                {sortedCafes.map((cafe, index) => (
                   <div 
                     key={cafe._id} 
                     onClick={() => setSelectedCafe(cafe)}
-                    className="cursor-pointer"
+                    className="cursor-pointer animate-fadeIn"
+                    style={{ animationDelay: `${index * 0.05}s` }}
                   >
                     <CafeCard cafe={cafe} />
                   </div>
@@ -150,18 +168,29 @@ const Cafes = () => {
               </div>
               
               {sortedCafes.length === 0 && (
-                <div className="text-center py-12">
-                  <p className="text-xl text-gray-600 dark:text-gray-300">No cafes found. Try adjusting your filters.</p>
+                <div className="text-center py-20 animate-bounceIn">
+                  <div className="text-6xl mb-4">😔</div>
+                  <p className="text-2xl font-bold text-gray-700 dark:text-gray-300 mb-2">
+                    No cafes found
+                  </p>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    Try adjusting your filters or search criteria
+                  </p>
                 </div>
               )}
             </>
           )}
         </div>
 
-        <div className="lg:col-span-1">
-          <div className="sticky top-24">
-            <h2 className="text-xl font-bold mb-4 dark:text-white">Map View</h2>
-            <MapView cafes={filteredCafes} selectedCafe={selectedCafe} />
+        <div className="lg:col-span-1 hidden lg:block">
+          <div className="sticky top-24 animate-slideInRight">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 border border-gray-100 dark:border-gray-700">
+              <h2 className="text-xl font-bold mb-4 dark:text-white flex items-center gap-2">
+                <span className="text-2xl">🗺️</span>
+                Map View
+              </h2>
+              <MapView cafes={filteredCafes} selectedCafe={selectedCafe} />
+            </div>
           </div>
         </div>
       </div>
