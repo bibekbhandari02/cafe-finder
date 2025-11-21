@@ -56,10 +56,16 @@ const MapSearch = () => {
   const fetchCafes = async () => {
     try {
       const { data } = await axios.get('/api/cafes');
-      setCafes(data);
-      setFilteredCafes(data);
+      console.log('Fetched cafes:', data); // Debug log
+      // Ensure data is an array
+      const cafesArray = Array.isArray(data) ? data : [];
+      setCafes(cafesArray);
+      setFilteredCafes(cafesArray);
     } catch (error) {
       console.error('Error fetching cafes:', error);
+      console.error('Error details:', error.response?.data);
+      setCafes([]);
+      setFilteredCafes([]);
     } finally {
       setLoading(false);
     }
