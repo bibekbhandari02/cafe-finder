@@ -46,23 +46,24 @@ router.get('/:id', async (req, res) => {
 // Add cafe with image upload (Admin only)
 router.post('/', protect, adminOnly, upload.single('image'), async (req, res) => {
   try {
-    console.log('ADD CAFE - BODY:', req.body);
-    console.log('ADD CAFE - FILE:', req.file);
-    console.log('ADD CAFE - Cloudinary configured:', hasCloudinaryConfig);
+    console.log('=== ADD CAFE REQUEST ===');
+    console.log('BODY:', JSON.stringify(req.body, null, 2));
+    console.log('FILE:', JSON.stringify(req.file, null, 2));
+    console.log('Cloudinary configured:', hasCloudinaryConfig);
 
     // Handle image path based on storage type
     let imagePath = null;
     if (req.file) {
       if (hasCloudinaryConfig) {
-        // Cloudinary returns the full URL in req.file.path
         imagePath = req.file.path;
+        console.log('Using Cloudinary path:', imagePath);
       } else {
-        // Local storage returns filename
         imagePath = `/uploads/${req.file.filename}`;
+        console.log('Using local path:', imagePath);
       }
     }
 
-    const cafe = await Cafe.create({
+    const cafeData = {
       name: req.body.name,
       description: req.body.description,
       address: {
@@ -80,38 +81,58 @@ router.post('/', protect, adminOnly, upload.single('image'), async (req, res) =>
         : [],
       openingHours: req.body.openingHours ? JSON.parse(req.body.openingHours) : undefined,
       image: imagePath || undefined,
-    });
+    };
 
+    console.log('Creating cafe with data:', cafeData);
+    const cafe = await Cafe.create(cafeData);
+    console.log('✅ Cafe created successfully:', cafe._id);
+    
     res.status(201).json(cafe);
   } catch (error) {
-    console.error('ERROR ADDING CAFE:', error);
-    res.status(500).json({ message: 'Failed to add cafe', error: error.message });
+    console.error('❌ ERROR ADDING CAFE:', error.message);
+    console.error('Full error:', error);
+    res.status(500).json({ 
+      message: 'Failed to add cafe', 
+      error: error.message,
+      details: error.toString()
+    });
   }
 });
 
 // Update cafe (Admin only)
 router.put('/:id', protect, adminOnly, upload.single('image'), async (req, res) => {
   try {
-    console.log('UPDATE CAFE - ID:', req.params.id);
-    console.log('UPDATE CAFE - BODY:', req.body);
-    console.log('UPDATE CAFE - FILE:', req.file);
-    console.log('UPDATE CAFE - Cloudinary configured:', hasCloudinaryConfig);
+    console.log('=== UPDATE CAFE REQUEST ===');
+    console.log('ID:', req.params.id);
+    console.log('BODY:', JSON.stringify(req.body, null, 2));
+    console.log('FILE:', req.file ? JSON.stringify(req.file, null, 2) : 'No file uploaded');
+    console.log('Cloudinary configured:', hasCloudinaryConfig);
 
     const cafe = await Cafe.findById(req.params.id);
-    if (!cafe) return res.status(404).json({ message: 'Cafe not found' });
+    if (!cafe) {
+      console.log('❌ Cafe not found');
+      return res.status(404).json({ message: 'Cafe not found' });
+    }
+
+    console.log('Current cafe image:', cafe.image);
 
     // Handle image path based on storage type
-    let imagePath = cafe.image;
+    let imagePath = cafe.image; // Keep existing image by default
     if (req.file) {
       if (hasCloudinaryConfig) {
         // Cloudinary returns the full URL in req.file.path
         imagePath = req.file.path;
+        console.log('✅ New Cloudinary image path:', imagePath);
       } else {
         // Local storage returns filename
         imagePath = `/uploads/${req.file.filename}`;
+        console.log('✅ New local image path:', imagePath);
       }
+    } else {
+      console.log('ℹ️ No new image uploaded, keeping existing image');
     }
 
+    // Update fields
     cafe.name = req.body.name || cafe.name;
     cafe.description = req.body.description || cafe.description;
     cafe.address.street = req.body.street || cafe.address.street;
@@ -120,14 +141,34 @@ router.put('/:id', protect, adminOnly, upload.single('image'), async (req, res) 
     cafe.address.coordinates.lng = req.body.lng ? parseFloat(req.body.lng) : cafe.address.coordinates.lng;
     cafe.priceRange = req.body.priceRange || cafe.priceRange;
     cafe.amenities = req.body.amenities ? req.body.amenities.split(',').map(a => a.trim()) : cafe.amenities;
+    
+    // Handle opening hours if provided
+    if (req.body.openingHours) {
+      try {
+        cafe.openingHours = typeof req.body.openingHours === 'string' 
+          ? JSON.parse(req.body.openingHours) 
+          : req.body.openingHours;
+      } catch (e) {
+        console.log('⚠️ Could not parse opening hours:', e.message);
+      }
+    }
+    
     cafe.image = imagePath;
 
+    console.log('Saving cafe with image:', cafe.image);
     const updatedCafe = await cafe.save();
-    console.log('UPDATE SUCCESS:', updatedCafe._id);
+    console.log('✅ UPDATE SUCCESS - Cafe ID:', updatedCafe._id);
+    console.log('✅ Final image path:', updatedCafe.image);
+    
     res.json(updatedCafe);
   } catch (error) {
-    console.error('UPDATE ERROR:', error);
-    res.status(500).json({ message: error.message, error: error.toString() });
+    console.error('❌ UPDATE ERROR:', error.message);
+    console.error('Full error:', JSON.stringify(error, null, 2));
+    res.status(500).json({ 
+      message: 'Failed to update cafe',
+      error: error.message,
+      details: error.toString()
+    });
   }
 });
 

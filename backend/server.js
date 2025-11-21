@@ -46,6 +46,17 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error('=== GLOBAL ERROR HANDLER ===');
+  console.error('Error:', err.message);
+  console.error('Stack:', err.stack);
+  res.status(err.status || 500).json({
+    message: err.message || 'Internal Server Error',
+    error: process.env.NODE_ENV === 'development' ? err : {}
+  });
+});
+
 // Database connection with proper options
 const connectDB = async () => {
   try {
